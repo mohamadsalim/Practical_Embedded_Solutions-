@@ -1,0 +1,92 @@
+
+#VECTOR TABLE 
+see Figure 2-6. Vector Table in page 107
+On system reset, the vector table is fixed at address 0x0000.0000. Privileged software can write to
+the Vector Table Offset (VTABLE) register to relocate the vector table start address to a different
+memory location, in the range 0x0000.0400 to 0x3FFF.FC00 (see “Vector Table” on page 106). Note
+that when configuring the VTABLE register, the offset must be aligned on a 1024-byte boundary
+
+
+Reset Sources
+The TM4C123GH6PM microcontroller has six sources of reset:
+1. Power-on reset (POR) (see page 214).
+ 
+#SYSTEM CONTROLE SEC:
+4. Software-initiated reset (with the software reset registers) (see page 217).
+5. A watchdog timer reset condition violation (see page 217).
+
+Table 5-2. Reset Sources in page 231 
+
+
+At any reset that resets the core, the user has the opportunity to direct the core to execute the ROM
+Boot Loader or the application in Flash memory by using any GPIO signal as configured in the Boot
+Configuration (BOOTCFG) register.
+At reset, the following sequence is performed:
+1. The BOOTCFG register is read. If the EN bit is clear, the ROM Boot Loader is executed.
+2. In the ROM Boot Loader, the status of the specified GPIO pin is compared with the specified
+polarity. If the status matches the specified polarity, the ROM is mapped to address 0x0000.0000
+and execution continues out of the ROM Boot Loader.
+3. f then EN bit is set or the status doesn't match the specified polarity, the data at address
+0x0000.0004 is read, and if the data at this address is 0xFFFF.FFFF, the ROM is mapped to
+address 0x0000.0000 and execution continues out of the ROM Boot Loader.
+4. If there is data at address 0x0000.0004 that is not 0xFFFF.FFFF, the stack pointer (SP) is loaded
+from Flash memory at address 0x0000.0000 and the program counter (PC) is loaded from
+address 0x0000.0004. The user application begins executing.
+Note: If the device fails the initialization phase, it toggles the TDO output pin as an indication the
+device is not executing. This feature is provided for debug purposes.
+For example, if the BOOTCFG register is written and committed with the value of 0x0000.3C01,
+then PB7 is examined at reset to determine if the ROM Boot Loader should be executed. If PB7 is
+Low, the core unconditionally begins executing the ROM boot loader. If PB7 is High, then the
+application in Flash memory is executed if the reset vector at location 0x0000.0004 is not
+0xFFFF.FFFF. Otherwise, the ROM boot loader is executed.
+
+
+
+#INTERNAL MEMORY SEC 
+
+Memory map of tm4c123gh ,The memory map for the TM4C123GH6PM controller is provided in Table 2-4 on page 92 
+CODE start 0x0000.0000 end 0x0003.FFFF
+0x0004.0000 0x1FFF.FFFF Reserved
+SRAM start 0x2000.0000 end 0x2000.7FFF
+0x2000.8000 0x21FF.FFFF Reserved 
+
+- The internal SRAM of the TM4C123GH6PM device is located at address 0x2000.0000 of the device
+  memory map  
+- The internal ROM of the TM4C123GH6PM device is located at address 0x0100.0000 of the device
+  memory map
+  The ROM contains the following components:
+■ TivaWare™ Boot Loader and vector table , see Table 2-8. Exception Types 
+■ TivaWare Peripheral Driver Library (DriverLib) release for product-specific peripherals and
+interfaces
+■ Advanced Encryption Standard (AES) cryptography tables
+■ Cyclic Redundancy Check (CRC) error detection functionality
+
+The Peripheral Driver Library APIs in ROM can be called by applications, reducing Flash memory
+requirements and freeing the Flash memory to be used for other purposes 
+
+8.2.2.1 Boot Loader Overview (is pretty important to read)
+Boot Configuration (BOOTCFG) register (see page 581).
+8.2.2.2 TivaWare Peripheral Driver Library (for read)
+
+-Flash Memory (i guess that it's located at address 0x0000.0004)
+At system clock speeds of 40 MHz and below, the Flash memory is read in a single cycle. The Flash
+memory is organized as a set of 1-KB blocks that can be individually erased. An individual 32-bit
+word can be programmed to change bits from 1 to 0. In addition, a write buffer provides the ability
+to program 32 continuous words in Flash memory in half the time of programming the words
+individually. Erasing a block causes the entire contents of the block to be reset to all 1s. The 1-KB
+blocks are paired into sets of 2-KB blocks that can be individually protected. The protection allows
+blocks to be marked as read-only or execute-only, providing different levels of code protection.
+Read-only blocks cannot be erased or programmed, protecting the contents of those blocks from
+being modified. Execute-only blocks cannot be erased or programmed and can only be read by the
+controller instruction fetch mechanism, protecting the contents of those blocks from being read by
+either the controller or a debugger.
+
+
+
+
+
+
+
+
+
+
