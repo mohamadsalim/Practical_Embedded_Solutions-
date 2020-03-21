@@ -1,0 +1,20 @@
+
+VPATH = src headers
+
+CPPFLAGS = -I headers
+
+SOURCES = main.c \
+App.c \
+Lib.c
+
+Depend: main.o App.o Lib.o
+main.o: App.h Lib.h
+App.o: App.h
+Lib.o : Lib.h
+
+include $(subst .c,.d,$(SOURCES))
+
+%.d: %.c
+	$(CC) -M $(CPPFLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
